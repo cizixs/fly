@@ -72,3 +72,32 @@ func TestAddDuration(t *testing.T) {
 		}
 	}
 }
+
+func TestTo(t *testing.T) {
+	assert := assert.New(t)
+
+	// 2016-12-03 22:15:35 +0000 UTC
+	td := time.Date(2016, time.December, 3, 22, 15, 35, 0, time.UTC)
+	f := fly.New(td)
+
+	cases := []struct {
+		timezone string
+		err      bool
+		expected string
+	}{
+		{"Asia/Shanghai", false, "2016-12-04 06:15:35 +0800 CST"},
+		{"America/New_York", false, "2016-12-03 17:15:35 -0500 EST"},
+		{"", false, "2016-12-03 22:15:35 +0000 UTC"},
+		{"UTC", false, "2016-12-03 22:15:35 +0000 UTC"},
+		{"nowhere", true, ""},
+	}
+	for _, tt := range cases {
+		lt, err := f.To(tt.timezone)
+		if tt.err {
+			assert.Error(err, "Expect error on %v", tt.timezone)
+		} else {
+			assert.NoError(err, "Convert time to different timezone should cause no error.")
+			assert.Equal(tt.expected, lt.String())
+		}
+	}
+}

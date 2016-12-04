@@ -44,6 +44,8 @@ func (f *Fly) Zone() (string, int) {
 // each with a decimal number and a time unit.
 // Valid time units are "ns", "us", "ms", "s", "m", "h".
 //
+// Note that you can move time backward by setting the value to negative, like
+// `time.Duration(-5 * time.Hour)`, or `-5h`.
 // If parameter can not be parsed as duration, an error will be returned
 func (f *Fly) Add(d interface{}) (*Fly, error) {
 	offset := time.Duration(0)
@@ -62,6 +64,20 @@ func (f *Fly) Add(d interface{}) (*Fly, error) {
 		return nil, fmt.Errorf("Unknow duration instance.")
 	}
 	return &Fly{f.t.Add(offset)}, nil
+}
+
+// To returns the time of the location identified by given name.
+// If name is "" or "UTC", To returns UTC time. If the name is "Local",
+// To returns local time.
+// Otherwsie, To returns the time at location corresponding to IANA Time Zone,
+// such as "America/New_York", or "Asia/Shanghai".
+func (f *Fly) To(name string) (*Fly, error) {
+	loc, err := time.LoadLocation(name)
+	if err != nil {
+		return nil, err
+	}
+
+	return New(f.t.In(loc)), nil
 }
 
 // UTCNow returns right now based on utc time zone

@@ -73,6 +73,20 @@ f.Humanize()
 // 2 hours from now
 ```
 
+### Convert to different timezones
+
+`To` returns the time of the location identified by given name.
+If name is "" or "UTC", To returns UTC time. If the name is "Local",
+To returns local time.
+
+Otherwsie, To returns the time at location corresponding to IANA Time Zone,
+such as "America/New_York", or "Asia/Shanghai".
+
+```
+f := fly.Now()
+t, err := f.To("Asia/Shanghai")
+```
+
 ## License
 
 [MIT License](https://github.com/cizixs/fly/blob/master/LICENSE)
