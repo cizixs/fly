@@ -14,7 +14,7 @@ golang provides `time` library to deal with time, and it works well.
 
 - [x] humanize date/time output
 - [ ] fully compatible with standard `time` library
-- [ ] easy conversion between different timezones
+- [x] easy conversion between different timezones
 - [ ] parse date/time in any user-defined format string
 - [ ] abundant shortcuts for real-life date conversion, such as `Tomorrow`, `Sunday`, `NextYear`...
 - [ ] access date ranges, floors and ceilings in all time frames(microsecond up to year)
@@ -86,6 +86,10 @@ such as "America/New_York", or "Asia/Shanghai".
 f := fly.Now()
 t, err := f.To("Asia/Shanghai")
 ```
+
+## Inspiration
+
+`fly` is heavily inspired by [Arrow](https://github.com/crsmithdev/arrow).
 
 ## License
 
