@@ -73,7 +73,7 @@ func TestAddDuration(t *testing.T) {
 	}
 }
 
-func TestTo(t *testing.T) {
+func TestTimeZone(t *testing.T) {
 	assert := assert.New(t)
 
 	// 2016-12-03 22:15:35 +0000 UTC
@@ -99,5 +99,64 @@ func TestTo(t *testing.T) {
 			assert.NoError(err, "Convert time to different timezone should cause no error.")
 			assert.Equal(tt.expected, lt.String())
 		}
+	}
+}
+
+func TestMillisecond(t *testing.T) {
+	assert := assert.New(t)
+
+	// 2016-12-03 22:15:35 +0000 UTC
+	td := time.Date(2016, time.December, 3, 22, 15, 35, 123456789, time.UTC)
+	f := fly.New(td)
+	assert.Equal(123, f.Millisecond())
+	assert.Equal(456, f.Microsecond())
+	assert.Equal(123456789, f.Nanosecond())
+}
+
+func TestFloor(t *testing.T) {
+	assert := assert.New(t)
+
+	cases := []struct {
+		date     time.Time
+		unit     string
+		expected string
+	}{
+		{time.Date(2016, time.December, 3, 22, 15, 35, 123456789, time.UTC), "1h", "2016-12-03 22:00:00 +0000 UTC"},
+		{time.Date(2016, time.December, 3, 22, 45, 35, 123456789, time.UTC), "1h", "2016-12-03 22:00:00 +0000 UTC"},
+		{time.Date(2016, time.December, 3, 22, 15, 35, 123456789, time.UTC), "1m", "2016-12-03 22:15:00 +0000 UTC"},
+		{time.Date(2016, time.December, 3, 22, 15, 13, 123456789, time.UTC), "1m", "2016-12-03 22:15:00 +0000 UTC"},
+		{time.Date(2016, time.December, 3, 22, 15, 35, 123456789, time.UTC), "1s", "2016-12-03 22:15:35 +0000 UTC"},
+		{time.Date(2016, time.December, 3, 22, 15, 35, 823456789, time.UTC), "1s", "2016-12-03 22:15:35 +0000 UTC"},
+	}
+	// 2016-12-03 22:15:35 +0000 UTC
+
+	for _, tc := range cases {
+		f := fly.New(tc.date)
+		f, _ = f.Floor(tc.unit)
+		assert.Equal(tc.expected, f.String())
+	}
+}
+
+func TestCeil(t *testing.T) {
+	assert := assert.New(t)
+
+	cases := []struct {
+		date     time.Time
+		unit     string
+		expected string
+	}{
+		{time.Date(2016, time.December, 3, 22, 15, 35, 123456789, time.UTC), "1h", "2016-12-03 22:59:59 +0000 UTC"},
+		{time.Date(2016, time.December, 3, 22, 45, 35, 123456789, time.UTC), "1h", "2016-12-03 22:59:59 +0000 UTC"},
+		{time.Date(2016, time.December, 3, 22, 15, 35, 123456789, time.UTC), "1m", "2016-12-03 22:15:59 +0000 UTC"},
+		{time.Date(2016, time.December, 3, 22, 15, 13, 123456789, time.UTC), "1m", "2016-12-03 22:15:59 +0000 UTC"},
+		{time.Date(2016, time.December, 3, 22, 15, 35, 123456789, time.UTC), "1s", "2016-12-03 22:15:35 +0000 UTC"},
+		{time.Date(2016, time.December, 3, 22, 15, 35, 823456789, time.UTC), "1s", "2016-12-03 22:15:35 +0000 UTC"},
+	}
+	// 2016-12-03 22:15:35 +0000 UTC
+
+	for _, tc := range cases {
+		f := fly.New(tc.date)
+		f, _ = f.Ceil(tc.unit)
+		assert.Equal(tc.expected, f.String())
 	}
 }

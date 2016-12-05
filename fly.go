@@ -8,6 +8,73 @@ import (
 	"github.com/dustin/go-humanize"
 )
 
+// Duration represents the elapsed time between two instants as an int64 nanosecond count.
+type Duration struct {
+	d time.Duration
+}
+
+const (
+	Nanosecond  time.Duration = 1
+	Microsecond               = 1000 * Nanosecond
+	Millisecond               = 1000 * Microsecond
+	Second                    = 1000 * Millisecond
+	Minute                    = 60 * Second
+	Hour                      = 60 * Minute
+	Day                       = 24 * Hour
+	Week                      = 7 * Day
+)
+
+func newDuration(d time.Duration) *Duration {
+	return &Duration{d}
+}
+
+// ParseDuration parses a duration string
+func ParseDuration(s string) (*Duration, error) {
+	d, err := time.ParseDuration(s)
+	if err != nil {
+		return nil, err
+	}
+
+	return newDuration(d), nil
+}
+
+// Since returns the time elapsed since t.
+func Since(f Fly) *Duration {
+	return newDuration(time.Since(f.t))
+}
+
+// Hours returns the duration as a floating point number of hours
+func (d *Duration) Hours() float64 {
+	return d.d.Hours()
+}
+
+// Hour returns the hour elapsed
+func (d *Duration) Hour() int {
+	h := d.d % Hour
+	h = h / Hour
+	return int(h)
+}
+
+// Minutes returns the duration as a floating point number of minutes
+func (d *Duration) Minutes() float64 {
+	return d.d.Minutes()
+}
+
+// Seconds returns the duration as a floating point number of seconds
+func (d *Duration) Seconds() float64 {
+	return d.d.Seconds()
+}
+
+// Nanoseconds returns the duration as an integer nanosecond count
+func (d *Duration) Nanoseconds() int64 {
+	return d.d.Nanoseconds()
+}
+
+// String returns a string representing the duration in the form "72h3m0.5s".
+func (d *Duration) String() string {
+	return d.d.String()
+}
+
 // Fly is the main data struct
 type Fly struct {
 	t time.Time
@@ -78,6 +145,74 @@ func (f *Fly) To(name string) (*Fly, error) {
 	}
 
 	return New(f.t.In(loc)), nil
+}
+
+// Millisecond returns current time milliseconds value
+func (f *Fly) Millisecond() int {
+	return f.t.Nanosecond() / 1000 / 1000
+}
+
+// Microsecond returns current time milliseconds value
+func (f *Fly) Microsecond() int {
+	return (f.t.Nanosecond() / 1000) % 1000
+}
+
+// Nanosecond returns current time milliseconds value
+// Note: Nanosecond is in the range [0, 999999999], which includes seconds and microseconds.
+func (f *Fly) Nanosecond() int {
+	return f.t.Nanosecond()
+}
+
+// pastHalf checks if the time passes half of the duration.
+// If d is 1 hour, it returns if it's somewhere past 30 minutes.
+func (f *Fly) pastHalf(d time.Duration) bool {
+	switch d {
+	case time.Duration(time.Hour):
+		return f.t.Minute() > 30
+	case time.Duration(time.Minute):
+		return f.t.Second() > 30
+	case time.Duration(time.Second):
+		return f.Millisecond() > 500
+	case time.Duration(time.Millisecond):
+		return f.Microsecond() > 500
+	case time.Duration(time.Microsecond):
+		return f.t.Nanosecond() > 500
+	default:
+		// TODO: handle unformatted duration
+		return false
+	}
+}
+
+// Floor returns the result of time floor of certain unit.
+// Parameter should be hour, minute, second, microsecond,
+// If unit is negative, Floor returns time unchanged
+func (f *Fly) Floor(name string) (*Fly, error) {
+	// TODO(cizixs): format duration to standard unit
+	d, err := time.ParseDuration(name)
+	if err != nil {
+		return nil, err
+	}
+	newT := f.t.Round(d)
+	if f.pastHalf(d) {
+		newT = newT.Add(-d)
+	}
+	return New(newT), nil
+}
+
+// Ceil returns the result of time ceil of certain unit.
+// Parameter should be hour, minute, second, microsecond,
+// If unit is negative, Ceil returns time unchanged
+func (f *Fly) Ceil(name string) (*Fly, error) {
+	// TODO(cizixs): format duration to standard unit
+	d, err := time.ParseDuration(name)
+	if err != nil {
+		return nil, err
+	}
+	newT := f.t.Round(d)
+	if !f.pastHalf(d) {
+		newT = newT.Add(time.Duration(d))
+	}
+	return New(newT), nil
 }
 
 // UTCNow returns right now based on utc time zone
